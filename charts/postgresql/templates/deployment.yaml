@@ -1,0 +1,60 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "postgresql.fullname" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        name: {{ template "postgresql.name" . }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: DB_USER
+            value: gitlab
+          - name: DB_PASS
+            value: +BP52QIxpT/flVCMpL3KXA==
+          - name: DB_NAME
+            value: gitlab_production
+          - name: DB_EXTENSION
+            value: pg_trgm
+          ports:
+            - name: postgres
+              containerPort: {{ .Values.service.externalPort }}
+          volumeMounts:
+          - mountPath: {{ .Values.volumes.mountpath }}
+            name: {{ .Values.volumes.name }}
+          livenessProbe:
+            exec:
+              command:
+              - pg_isready
+              - -h
+              - localhost
+              - -U
+              - postgres
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+              - pg_isready
+              - -h
+              - localhost
+              - -U
+              - postgres
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+      volumes:
+      - name: {{ .Values.volumes.name }}
+        emptyDir: {}

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "gitlab.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    name: {{ template "gitlab.name" . }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.sshPort }}
+      targetPort: {{ .Values.service.sshname }}
+      name: {{ .Values.service.sshname }}
+    - port: {{ .Values.service.httpPort }}
+      targetPort: {{ .Values.service.httpname }}
+      name: {{ .Values.service.httpname }}
+  selector:
+    name: {{ template "gitlab.name" . }}
